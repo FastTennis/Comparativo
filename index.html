@@ -811,11 +811,16 @@
     var header = rows[0], idx = {}, dupes = {};
     header.forEach(function(h, i){
       if (!h) return;
-      if (!(h in idx)){ idx[h] = i; return; }
+      // Remove espaços sobrando no nome da coluna (a planilha às vezes tem
+      // cabeçalhos como " Ating. (%) MXF" com espaço no início), senão a
+      // busca abaixo por nome exato nunca bate.
+      var hh = String(h).trim();
+      if (!hh) return;
+      if (!(hh in idx)){ idx[hh] = i; return; }
       // Cabeçalho duplicado na planilha (duas colunas com o mesmo nome):
       // guarda todos os índices candidatos para decidir depois, pelos
       // valores reais, qual coluna é a de verdade.
-      (dupes[h] || (dupes[h] = [idx[h]])).push(i);
+      (dupes[hh] || (dupes[hh] = [idx[hh]])).push(i);
     });
     Object.keys(dupes).forEach(function(colName){
       var candidates = dupes[colName];
@@ -1916,7 +1921,8 @@
       updateLastRefreshNote();
       showRefreshStatus('Base atualizada com sucesso.', 'ok');
     } catch (err){
-      showRefreshStatus('Não foi possível atualizar agora (dados exibidos podem estar desatualizados).', 'error');
+      var detail = (err && err.message) ? (' [' + err.message + ']') : '';
+      showRefreshStatus('Não foi possível atualizar agora (dados exibidos podem estar desatualizados).' + detail, 'error');
     } finally {
       refreshInProgress = false;
     }
